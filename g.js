@@ -43,8 +43,7 @@ async function getUserInput() {
 	});
 }
 
-function run(rawData = []) {
-
+function makeRegions(rawData) {
 	const regions = {};
 
 	for (let i = 0; i < rawData.length; i++) {
@@ -58,69 +57,95 @@ function run(rawData = []) {
 		}
 	}
 
+	return regions;
+}
+
+function makeGraph(data) {
+	const graph = {};
+	let i = 0;
+	let j = 1;
+
+	while (i < data.length) {
+
+		const point = data[j];
+		const pivot = data[i];
+
+		const distance = Math.sqrt(
+			Math.pow(point[0] - pivot[0], 2) + Math.pow(point[1] - pivot[1], 2)
+		);
+
+		if (!graph[pivot.join(',')]) {
+			graph[pivot.join(',')] = [];
+		}
+
+		if (distance > 0) {
+			if (distance < 2 || (distance === 2 && point[0] === pivot[0])) {
+				graph[pivot.join(',')].push(point.join(','))
+			}
+
+		}
+
+		if (j === data.length - 1) {
+			i++;
+			j = 0;
+			continue;
+		}
+
+		j++;
+
+	}
+
+	return graph
+}
+
+function dfs(adj, v, t) {
+
+	if (v === t) return true;
+
+	if (adj[v].visited) {
+		return false;
+	}
+
+	adj[v].visited = true;
+
+	for (const neighbor of adj[v]) {
+		if (!neighbor.visited) {
+			let reached = dfs(adj, neighbor, t);
+			if (reached) return true;
+		}
+	}
+	return false
+}
+
+function run(rawData = []) {
+	const regions = makeRegions(rawData);
+
 	for (const region in regions) {
 		const data = regions[region].sort();
+
+		const minPoint = data[0];
 
 		if (data.length === 1) {
 			continue;
 		}
 
-		let i = 0;
-		let j = 1;
+		const graph = makeGraph(data);
 
-		let minItem = null;
-		let minDistance = Number.MAX_VALUE;
+		const graphCopy = JSON.stringify(graph);
 
-		let neig = new Array(data.length);
+		for (const point of data) {
+			if (minPoint.toString() == point.toString()) continue;
 
-		neig[0] = data[i].join(',');
+			const canGo = dfs(JSON.parse(graphCopy), minPoint.join(','), point.join(','));
 
-		while (i < data.length - 1) {
-
-			const point = data[j];
-			const pivot = neig[i].split(',');
-
-			const distance = Math.sqrt(
-				Math.pow(point[0] - pivot[0], 2) + Math.pow(point[1] - pivot[1], 2)
-			);
-
-			if (minDistance > distance) {
-				minDistance = distance;
-
-				if (!neig.includes(point.join(','))) {
-					minItem = point;
-				} else {
-					minDistance = Number.MAX_VALUE;
-				}
-			}
-
-			if (j === data.length - 1 || (!neig.includes(minItem.join(',')) && minDistance <= 2)) {
-				i++;
-				neig[i] = minItem.join(',');
-				j = 0;
-				minDistance = Number.MAX_VALUE;
-				continue;
-			}
-
-			j++;
-
-		}
-
-		for (let i = 0; i < neig.length - 1; i++) {
-			const point = neig[i + 1].split(',');
-			const pivot = neig[i].split(',')
-			const distance = Math.sqrt(
-				Math.pow(point[0] - pivot[0], 2) + Math.pow(point[1] - pivot[1], 2)
-			);
-
-			if (distance > 2) {
-				console.log('NO')
+			if (!canGo) {
+				console.log('NO');
 				return;
 			}
 		}
 	}
 
-	console.log('YES');
+	console.log('YES')
 
 }
 
