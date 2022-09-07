@@ -33,49 +33,26 @@ function reduceStr(str) {
 			result.push(arr[i]);
 			i = j;
 		}
-
 		if (j >= arr.length - 1) {
 			result.push(arr[i]);
 			break;
 		}
-
 		j++
 	}
-
 	return result;
 }
 
 function run(rawData) {
 	let data = reduceStr(rawData);
-	let i = 0;
-	let j = 1;
-	let isChange = false;
-
-	while (true) {
-
-		if (data[j] !== data[i]) {
-			isChange = true;
-		} else {
-			if (isChange && j - i > 1) {
-				console.log('NO');
-				break;
-			}
+	const map = {};
+	for (const d of data) {
+		if (map[d]) {
+			console.log('NO');
+			return;
 		}
-
-		if (j === data.length - 1) {
-			i++;
-			j = i + 1;
-			isChange = false;
-			continue;
-		}
-
-		if (i === data.length - 1) {
-			console.log('YES');
-			break;
-		}
-
-		j++;
+		map[d] = true;
 	}
+	console.log('YES')
 }
 
 getUserInput();
